@@ -18,11 +18,30 @@ const dataRouter = require("./routes/DataRoutes");
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const PORT = process.env.PORT || 8800;
-const ClientURL = process.env.ClientURL;
 
 ConnectDB();
 
-app.use(cors({ origin: ClientURL, credentials: true }))
+const ClientURL = process.env.ClientURL;
+
+const corsOptions = {
+  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+
+    } else {
+      const allowedOrigins = [ClientURL];
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origin not allowed by CORS'));
+      }
+    }
+  }
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
