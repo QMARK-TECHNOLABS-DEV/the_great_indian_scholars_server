@@ -7,6 +7,8 @@ const AdminSchema = new mongoose.Schema({
     image:{type:String},
     role: {type:String, default:"admin", required:true},
     
+    office:{type:mongoose.Types.ObjectId, ref: 'Office', required:true},
+
 },{timestamps:true})
 
 const Admin = mongoose.model("Admin", AdminSchema);

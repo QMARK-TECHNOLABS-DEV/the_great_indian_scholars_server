@@ -7,6 +7,7 @@ const studentCtrl = {};
 const Application = require("../models/ApplicationModel");
 const Work = require("../models/WorkModel");
 const Employee = require("../models/EmployeeModel");
+const Office = require("../models/OfficeModel");
 
 //Create Student;
 
@@ -20,6 +21,16 @@ studentCtrl.CreateStudent = async (req, res) => {
     console.log("address", req.body.address);
 
     try {
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
+
         let image;
         if (req.file) {
             image = req.file.location
@@ -393,6 +404,11 @@ studentCtrl.GetWorkStudents = async(req,res)=>{
             isActive: true,
         }
 
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
         if (!isValidObjectId(employeeId)) return res.status(400).json({ msg: "Invalid Employee Id" });
 
         const employee = await Employee.findById(employeeId);
@@ -438,6 +454,11 @@ studentCtrl.GetTeamStudents = async(req,res)=>{
         let filters = {
             $or: [...ORArray],
             isActive: true,
+        }
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
         }
 
         if (!isValidObjectId(leaderId)) return res.status(400).json({ msg: "Invalid leader Id" });

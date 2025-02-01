@@ -19,6 +19,8 @@ const ApplicationSchema = new mongoose.Schema({
 
     phase:{type:String, default: "pending"},
  
+    office:{type:mongoose.Types.ObjectId, ref: 'Office', required:true},
+
 },{timestamps:true});
 
 

@@ -8,6 +8,8 @@ const ProjectSchema = new mongoose.Schema({
     members:{type:Array, default:[]},
     tasks:{type:Array,default:[]},
 
+    office:{type:mongoose.Types.ObjectId, ref: 'Office', required:true},
+
 },{timestamps:true});
 
 const Project = mongoose.model("Project", ProjectSchema);

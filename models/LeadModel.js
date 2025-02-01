@@ -11,6 +11,8 @@ const LeadSchema = new mongoose.Schema({
     status:{type: String, default: "Untouched"},
     statusUpdatedAt:{type: Date, default: Date.now()},
 
+    office:{type:mongoose.Types.ObjectId, ref: 'Office', required:true},
+
 },{timestamps: true})
 
 const Lead = mongoose.model("Lead", LeadSchema)
