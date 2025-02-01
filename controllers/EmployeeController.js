@@ -9,6 +9,7 @@ const Task = require("../models/TaskModel");
 const Stepper = require("../models/StepperModel")
 const ObjectId = mongoose.Types.ObjectId;
 const { isValidObjectId } = require("mongoose");
+const ISTDate = require("../middlewares/ISTDate");
 
 const employeeCtrl = {};
 
@@ -176,7 +177,7 @@ employeeCtrl.GetTeamMembers = async (req, res) => {
         let filters = {
             $or: [
                 { leader: new ObjectId(leaderId) },
-                {  _id: new ObjectId(leaderId) },
+                { _id: new ObjectId(leaderId) },
             ],
             name: { $regex: new RegExp(searchQuery, "i") },
             department: { $regex: new RegExp(department, "i") },
@@ -253,7 +254,7 @@ employeeCtrl.GetEmployee = async (req, res) => {
         }
 
         const employee = await Employee.findById(empId, { password: 0 })
-        .populate('office', '_id name')
+            .populate('office', '_id name')
         console.log(employee);
 
         if (!employee) return res.status(404).json({ msg: "Employee not found" });
@@ -483,10 +484,12 @@ employeeCtrl.RetrieveTeamWorks = async (req, res) => {
     try {
         if (!isValidObjectId(leaderId)) return res.status(400).json({ msg: "Invalid Employee Id" });
 
-        const members = await Employee.find({ $or: [
-            { leader: new ObjectId(leaderId) },
-            {  _id: new ObjectId(leaderId) },
-        ], }, { _id: 1 });
+        const members = await Employee.find({
+            $or: [
+                { leader: new ObjectId(leaderId) },
+                { _id: new ObjectId(leaderId) },
+            ],
+        }, { _id: 1 });
         const memberIds = members?.map(member => member._id)
 
         const result = await Work.aggregate([
@@ -614,10 +617,12 @@ employeeCtrl.GetTeamTaskMetrics = async (req, res) => {
             return res.status(400).json({ msg: "Invalid Id format" });
         }
 
-        const members = await Employee.find({ $or: [
-            { leader: new ObjectId(leaderId) },
-            {  _id: new ObjectId(leaderId) },
-        ], }, { _id: 1 });
+        const members = await Employee.find({
+            $or: [
+                { leader: new ObjectId(leaderId) },
+                { _id: new ObjectId(leaderId) },
+            ],
+        }, { _id: 1 });
         const memberIds = members?.map(member => member._id)
 
         const allTasks = await Work.find({ assignee: { $in: memberIds } }).countDocuments();
@@ -689,10 +694,12 @@ employeeCtrl.GetTeamLeadMetrics = async (req, res) => {
             return res.status(400).json({ msg: "Invalid Id format" });
         }
 
-        const members = await Employee.find({ $or: [
-            { leader: new ObjectId(leaderId) },
-            {  _id: new ObjectId(leaderId) },
-        ], }, { _id: 1 });
+        const members = await Employee.find({
+            $or: [
+                { leader: new ObjectId(leaderId) },
+                { _id: new ObjectId(leaderId) },
+            ],
+        }, { _id: 1 });
         const memberIds = members?.map(member => member._id)
 
         const allLeads = await Lead.find({ assignee: { $in: memberIds } }).countDocuments();
@@ -765,10 +772,12 @@ employeeCtrl.GetTeamFollowMetrics = async (req, res) => {
             return res.status(400).json({ msg: "Invalid Id format" });
         }
 
-        const members = await Employee.find({ $or: [
-            { leader: new ObjectId(leaderId) },
-            {  _id: new ObjectId(leaderId) },
-        ], }, { _id: 1 });
+        const members = await Employee.find({
+            $or: [
+                { leader: new ObjectId(leaderId) },
+                { _id: new ObjectId(leaderId) },
+            ],
+        }, { _id: 1 });
         const memberIds = members?.map(member => member._id)
 
         const allFollowups = await Followup.find({ assignee: { $in: memberIds } }).countDocuments();
@@ -870,7 +879,7 @@ employeeCtrl.WorkAssign = async (req, res) => {
         //Update the assignee and status in that particular step
 
         const modifiedStepper = await Stepper.findOneAndUpdate({ _id: new ObjectId(stepperId), steps: { $elemMatch: { _id: stepNumber } } },
-            { $set: { 'steps.$.assignee': employee._id, 'steps.$.status': "pending" } }, { new: true }
+            { $set: { 'steps.$.assignee': employee._id, 'steps.$.status': "pending", 'steps.$.assignedDate': ISTDate() } }, { new: true }
         );
 
         const applicationStatus = modifiedStepper?.steps[stepNumber - 1]?.name;
