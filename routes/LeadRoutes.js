@@ -4,13 +4,14 @@ const leadCtrl = require("../controllers/LeadController");
 const adminCheckMiddleware = require("../middlewares/adminCheckMiddleware");
 const staffChecker = require("../middlewares/staffChecker");
 const multer = require('multer');
+const customChecker = require("../middlewares/customChecker");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post("/create", adminCheckMiddleware, leadCtrl.CreateLead)
-router.post("/create-bulk", adminCheckMiddleware, upload.single('excelFile'), leadCtrl.BulkLeadCreation)
+router.post("/create", customChecker(['admin', 'leader']), leadCtrl.CreateLead)
+router.post("/create-bulk", customChecker(['admin', 'leader']), upload.single('excelFile'), leadCtrl.BulkLeadCreation)
 router.put("/update", staffChecker, leadCtrl.UpdateLead)
-router.put("/bulk-assign", adminCheckMiddleware, leadCtrl.BulkAssign)
+router.put("/bulk-assign", customChecker(['admin', 'leader']), leadCtrl.BulkAssign)
 router.get("/get/:id", staffChecker, leadCtrl.GetALead)
 
 router.get("/assigned-leads/:id", staffChecker, leadCtrl.GetMyLeads)

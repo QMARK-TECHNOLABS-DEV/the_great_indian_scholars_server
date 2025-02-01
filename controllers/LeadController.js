@@ -396,7 +396,7 @@ leadCtrl.DeleteALead = async (req, res, next) => {
 
 
 leadCtrl.createFollowup = async (req, res) => {
-    const { leadId, assignee, dueDate, note } = req.body;
+    const { leadId, assignee, dueDate, note, dueTime } = req.body;
 
     console.log(req.body)
 
@@ -405,7 +405,7 @@ leadCtrl.createFollowup = async (req, res) => {
 
         if (!dueDate) return res.status(400).json({ msg: "Invalid Due Date" });
 
-        const result = await Followup.create({ leadId: new ObjectId(leadId), assignee: new ObjectId(assignee), dueDate, note })
+        const result = await Followup.create({ leadId: new ObjectId(leadId), assignee: new ObjectId(assignee), dueDate, note, dueTime })
 
         console.log(result)
 
@@ -419,12 +419,12 @@ leadCtrl.createFollowup = async (req, res) => {
 
 leadCtrl.updateFollowup = async (req, res) => {
     const followupId = req.params.id;
-    const { dueDate, note, isCompleted } = req.body;
+    const { dueDate, note, isCompleted, dueTime } = req.body;
 
     try {
         if (!isValidObjectId(followupId)) return res.status(400).json({ msg: "Invalid Lead" });
 
-        await Followup.findByIdAndUpdate(followupId, { $set: { dueDate: dueDate, note: note, isCompleted: isCompleted } })
+        await Followup.findByIdAndUpdate(followupId, { $set: { dueDate: dueDate, note: note, isCompleted: isCompleted, dueTime } })
 
         res.status(200).json({ msg: "Followup Updated" })
 
