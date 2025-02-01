@@ -14,7 +14,8 @@ const StepperSchema = new mongoose.Schema({
                 name: { type: String },
                 groupStatus: { type: String },
                 status: { type: String },
-                assignee: { type: mongoose.Types.ObjectId }
+                assignee: { type: mongoose.Types.ObjectId },
+                assignedDate: { type: Date }
             }
         ],
         default: []

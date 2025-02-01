@@ -13,6 +13,7 @@ const partneredData = require("../datas/partnered.json");
 const nonPartneredData = require("../datas/non-partnered.json");
 const Work = require("../models/WorkModel");
 const Stepper = require("../models/StepperModel");
+const ISTDate = require("../middlewares/ISTDate");
 
 //Create Application;
 
@@ -73,7 +74,7 @@ applicationCtrl.CreateApplication = async (req, res) => {
             if (assignee) {
                 currentSteps = currentSteps.map((step) => {
                     if (step._id === 1) {
-                        return { ...step, status: "pending", assignee: new ObjectId(assignee) }
+                        return { ...step, status: "pending", assignee: new ObjectId(assignee), assignedDate: ISTDate() }
                     }
 
                     return step

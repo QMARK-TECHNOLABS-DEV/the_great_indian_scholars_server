@@ -7,6 +7,7 @@ const nonPartneredData = require("../datas/non-partnered.json");
 const Work = require("../models/WorkModel");
 const Comment = require("../models/CommentModel");
 const { isValidObjectId } = require("mongoose");
+const ISTDate = require("../middlewares/ISTDate");
 
 
 const stepCtrl = {}
@@ -37,7 +38,7 @@ stepCtrl.CreateAStepper = async (req, res) => {
         if (assignee) {
             currentSteps = currentSteps.map((step) => {
                 if (step._id === 1) {
-                    return { ...step, status: "pending", assignee: new ObjectId(assignee) }
+                    return { ...step, status: "pending", assignee: new ObjectId(assignee), assignedDate: ISTDate() }
                 }
 
                 return step
@@ -119,7 +120,7 @@ stepCtrl.CreateMultipleSteppers = async (req, res) => {
             if (assignee) {
                 currentSteps = currentSteps.map((step) => {
                     if (step._id === 1) {
-                        return { ...step, status: "pending", assignee: new ObjectId(assignee) }
+                        return { ...step, status: "pending", assignee: new ObjectId(assignee), assignedDate: ISTDate() }
                     }
 
                     return step

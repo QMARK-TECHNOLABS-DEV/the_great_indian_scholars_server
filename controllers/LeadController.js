@@ -22,7 +22,6 @@ leadCtrl.CreateLead = async (req, res, next) => {
         if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) return res.status(400).json({ msg: "Invalid Email format" });
-
         }
 
         const existing = await Lead.findOne({
