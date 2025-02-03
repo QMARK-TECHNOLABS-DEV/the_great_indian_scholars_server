@@ -1,5 +1,5 @@
 const { deptCtrl } = require("../controllers/DepartmentController");
-const customRoleChecker = require("../middlewares/customRoleChecker");
+const { customRoleChecker } = require("../middlewares/customRoleChecker");
 
 const departmentRouter = require("express").Router();
 

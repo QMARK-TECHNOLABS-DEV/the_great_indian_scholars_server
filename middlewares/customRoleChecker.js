@@ -8,4 +8,4 @@ const customRoleChecker = (roles=[]) => {
     }
 }
 
-module.exports = customRoleChecker;
+module.exports = {customRoleChecker};

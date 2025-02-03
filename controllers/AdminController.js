@@ -7,6 +7,8 @@ const { isValidObjectId } = require("mongoose");
 const Lead = require("../models/LeadModel");
 const Office = require("../models/OfficeModel");
 const Student = require("../models/StudentModel");
+const Work = require("../models/WorkModel");
+const Followup = require("../models/FollowupModel");
 
 const adminCtrl = {};
 
@@ -417,6 +419,46 @@ adminCtrl.deleteOffice = async (req, res) => {
         }
 
         res.status(200).json({ office: office, msg: 'success' })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Something went wrong" });
+    }
+}
+
+adminCtrl.getTeamLeaderStatistics = async (req, res) => {
+    try {
+        const leaders = await Employee.find({ role: "leader" }, { _id: 1, name: 1 })
+
+        const mappedLeaders = await Promise.all(
+            leaders?.map(async (leader) => {
+                const members = await Employee.find({
+                    $or: [
+                        { leader: leader?._id },
+                        { _id: leader?._id },
+                    ],
+                }, { _id: 1 });
+
+                const memberIds = members?.map(member => member._id)
+
+                const [allTasks, allLeads, allFollowups] = await Promise.all([
+                    Work.countDocuments({ assignee: { $in: memberIds } }),
+                    Lead.countDocuments({ assignee: { $in: memberIds } }),
+                    Followup.countDocuments({ assignee: { $in: memberIds } }),
+                ])
+
+                return {
+                    _id: leader?._id,
+                    name: leader?.name,
+                    counts: {
+                        leads: allLeads,
+                        tasks: allTasks,
+                        followups: allFollowups
+                    }
+                }
+            }))
+
+
+        res.status(200).json({ msg: 'success', result: mappedLeaders })
     } catch (error) {
         console.log(error);
         res.status(500).json({ msg: "Something went wrong" });

@@ -4,7 +4,7 @@ const leadCtrl = require("../controllers/LeadController");
 const adminCheckMiddleware = require("../middlewares/adminCheckMiddleware");
 const staffChecker = require("../middlewares/staffChecker");
 const multer = require('multer');
-const customRoleChecker = require("../middlewares/customRoleChecker");
+const {customRoleChecker} = require("../middlewares/customRoleChecker");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
