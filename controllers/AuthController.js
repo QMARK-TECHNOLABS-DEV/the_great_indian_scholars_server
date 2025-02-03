@@ -64,15 +64,15 @@ authCtrl.Login = async (req, res) => {
 //Regenerate Access Token using Refresh Token;
 authCtrl.regenerateAccessToken = async (req, res) => {
     const refreshToken = req.body.refreshToken;
-    console.log("therefreshToken", req.body.refreshToken)
+    // console.log("therefreshToken", req.body.refreshToken)
 
     if (typeof refreshToken !== 'string') return res.status(401).json({ msg: "No refresh token" })
 
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) return res.status(401).json({ msg: "invalid refresh token" })
 
-        const accessToken = generateAccessToken({ userId: user._id, role: user.role });
-        const refreshToken = generateRefreshToken({ userId: user._id, role: user.role })
+        const accessToken = generateAccessToken({ userId: user?.userId, role: user?.role });
+        const refreshToken = generateRefreshToken({ userId: user?.userId, role: user?.role })
 
         res.status(200).json({ accessToken, refreshToken });
     })

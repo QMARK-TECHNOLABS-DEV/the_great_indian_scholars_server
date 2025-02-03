@@ -8,8 +8,9 @@ router.use(adminCheckMiddleware)
 router.get("/get/:id", adminCtrl.GetAdmin);
 router.put("/update", adminCtrl.UpdateAdmin);
 router.put("/change-password", adminCtrl.ChangePassword);
-router.get("/get-application-metrics", adminCtrl.GetApplicationMetrics);
 
+// dashboard endpoints
+router.get("/get-application-metrics", adminCtrl.GetApplicationMetrics);
 router.get('/get-emps-appsnleads', adminCtrl.GetEmpBasedLeadsnApps)
 router.get('/get-appsnleads', adminCtrl.AllLeadsnApps)
 router.get('/get-leadstages', adminCtrl.LeadStages)
