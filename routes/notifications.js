@@ -6,4 +6,8 @@ notifyRouter.post('/subscribe', notifyCtrl.subscribe)
 notifyRouter.post('/send/single', notifyCtrl.sendSingleNotification)
 notifyRouter.post('/send/multiple', notifyCtrl.sendMutipleNotifications)
 
-module.exports = {notifyRouter}
+notifyRouter.get('/users/:id', notifyCtrl.getUserNotifications)
+notifyRouter.get('/:id', notifyCtrl.getSingleNotification)
+notifyRouter.put('/status', notifyCtrl.alterReadStatus)
+
+module.exports = { notifyRouter }

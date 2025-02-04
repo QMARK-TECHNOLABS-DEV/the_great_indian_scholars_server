@@ -15,13 +15,11 @@ webpush.setVapidDetails(
     VAPID_PRIVATE_KEY
 );
 
-// **1. Employee Subscribes for Push Notifications**
-
+// Employee Subscribes for Push Notifications
 notifyCtrl.subscribe = async (req, res) => {
     try {
         const { userId, subscription } = req.body;
 
-        // Store subscription in MongoDB
         await Subscription.findOneAndUpdate(
             { userId },
             { subscription },
