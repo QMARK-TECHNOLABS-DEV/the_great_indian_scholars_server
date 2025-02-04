@@ -19,6 +19,7 @@ const authMiddleware = require('./middlewares/authMiddleware');
 const { departmentRouter } = require('./routes/departments');
 const { uploadRouter } = require('./routes/uploads');
 const { notifyRouter } = require('./routes/notifications');
+require("./cron/followupCron");
 
 
 const PORT = process.env.PORT || 8800;

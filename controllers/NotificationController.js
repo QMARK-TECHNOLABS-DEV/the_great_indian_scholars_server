@@ -8,9 +8,10 @@ const notifyCtrl = {}
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
+const MAIL_USER = process.env.MAIL_USER;
 
 webpush.setVapidDetails(
-    "mailto:abhijithrb91@gmail.com",
+    `mailto:${MAIL_USER}`,
     VAPID_PUBLIC_KEY,
     VAPID_PRIVATE_KEY
 );
