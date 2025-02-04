@@ -1,5 +1,6 @@
 const Comment = require("../models/CommentModel");
 const Employee = require("../models/EmployeeModel");
+const Office = require("../models/OfficeModel");
 const Project = require("../models/ProjectModel");
 const Task = require("../models/TaskModel");
 const ObjectId = require("mongoose").Types.ObjectId;
@@ -10,19 +11,31 @@ const projectCtrl = {}
 // Create project
 projectCtrl.CreateProject = async (req, res) => {
     const { name, startDate,
-        endDate, members } = req.body;
+        endDate, members, office } = req.body;
 
     console.log(name, startDate,
         endDate, members)
 
     try {
+
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
+
         const membersArray = members?.map((member) => new ObjectId(member))
 
         const schemaObject = {
             name,
             startDate,
             endDate,
-            members: membersArray
+            members: membersArray,
+            office
         }
         const newDoc = new Project(schemaObject);
 
@@ -43,9 +56,16 @@ projectCtrl.GetAllProjects = async (req, res) => {
     const page = req.query.page;
     const entries = req.query.entries;
 
+    const filters = {}
+    const { office } = req.query;
+    if (isValidObjectId(office)) {
+        filters.office = office;
+    }
+
     try {
 
         const allProjects = await Project.aggregate([
+            { $match: filters },
             {
                 $unwind: { path: "$tasks", preserveNullAndEmptyArrays: true }
             },
@@ -108,11 +128,17 @@ projectCtrl.GetEmpProjects = async (req, res) => {
     const entries = req.query.entries;
 
     try {
+        const filters = {}
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
+            filters.office = office;
+        }
 
         const allProjects = await Project.aggregate([
             {
-                $match:{
-                    members:{$in:[new ObjectId(empId)]}
+                $match: {
+                    members: { $in: [new ObjectId(empId)] },
+                    ...filters
                 }
             },
             {

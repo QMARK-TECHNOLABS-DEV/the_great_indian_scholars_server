@@ -8,6 +8,8 @@ const FollowupSchema = new mongoose.Schema({
     note:{type:String},
     isCompleted:{type:Boolean, default:false},
 
+    office:{type:mongoose.Types.ObjectId, ref: 'Office', required:true},
+
 },{timestamps:true})
 
 const Followup = mongoose.model("Followup",FollowupSchema);

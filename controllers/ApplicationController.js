@@ -2,10 +2,11 @@ const Application = require("../models/ApplicationModel")
 const Student = require("../models/StudentModel");
 const mongoose = require("mongoose");
 const Employee = require("../models/EmployeeModel");
+const Office = require("../models/OfficeModel");
 const ObjectId = mongoose.Types.ObjectId;
 const { GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { isValidObjectId } = require("mongoose");
-const { s3Client , Bucket} = require("../middlewares/multerToS3")
+const { s3Client, Bucket } = require("../middlewares/multerToS3")
 
 const applicationCtrl = {};
 
@@ -19,12 +20,23 @@ const ISTDate = require("../middlewares/ISTDate");
 
 applicationCtrl.CreateApplication = async (req, res) => {
     const { studentId, uniBased,
-        country, creator, assignee } = req.body;
+        country, creator, assignee, office } = req.body;
 
     try {
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
+
         if (!isValidObjectId(studentId)) {
             return res.status(400).json({ msg: "Invalid Id format" });
         }
+
 
         //typeof uniBased = [{through,intake,program,university,partnership}] 
 
@@ -41,6 +53,7 @@ applicationCtrl.CreateApplication = async (req, res) => {
             statuses,
             intakes,
             assignees,
+            office,
         }
 
         const student = await Student.findById(studentId);
@@ -156,6 +169,11 @@ applicationCtrl.GetAllApplications = async (req, res) => {
 
         let filters = {};
         let searchFilter = {};
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
 
         if (searchQuery) {
             searchFilter = {
@@ -306,6 +324,11 @@ applicationCtrl.GetMyApplications = async (req, res) => {
 
         let filters = {};
         let searchFilter = {};
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
 
         if (searchQuery) {
             searchFilter = {
@@ -466,6 +489,11 @@ applicationCtrl.GetTeamApplications = async (req, res) => {
 
         let filters = {};
         let searchFilter = {};
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
 
         if (searchQuery) {
             searchFilter = {

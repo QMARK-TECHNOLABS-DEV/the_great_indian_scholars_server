@@ -8,15 +8,26 @@ const Application = require("../models/ApplicationModel");
 const Followup = require("../models/FollowupModel");
 const ISTDate = require("../middlewares/ISTDate");
 const Employee = require("../models/EmployeeModel");
+const Office = require("../models/OfficeModel");
 const { sheet_to_json } = require('xlsx').utils;
 
 const leadCtrl = {}
 
 //Create Lead
 leadCtrl.CreateLead = async (req, res, next) => {
-    const { name, email, phone, country, leadSource, assignee } = req.body;
+    const { name, email, phone, country, leadSource, assignee, office } = req.body;
 
     try {
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
+
         if (assignee && !isValidObjectId(assignee)) return res.status(400).json({ msg: "Invalid Assignee" });
 
         if (email) {
@@ -26,12 +37,12 @@ leadCtrl.CreateLead = async (req, res, next) => {
 
         const existing = await Lead.findOne({
             name, email, phone, country, leadSource,
-            assignee: new ObjectId(assignee)
+            assignee: new ObjectId(assignee), office
         })
 
         if (existing) return res.status(409).json({ msg: "Lead already exists" });
 
-        const createObj = { name, email, phone, country, leadSource }
+        const createObj = { name, email, phone, country, leadSource, office }
 
         if (assignee && isValidObjectId(assignee)) {
             createObj.assignee = new ObjectId(assignee)
@@ -224,6 +235,11 @@ leadCtrl.GetMyLeads = async (req, res, next) => {
 
         const filters = { $or: [...ORArray] }
 
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
         if (assignee) { filters.assignee = new ObjectId(assignee) }
         if (leadSource) { filters.leadSource = { $regex: new RegExp(leadSource, "i") } }
         if (status) { filters.status = { $regex: new RegExp(status, "i") } }
@@ -292,6 +308,11 @@ leadCtrl.GetLeadsofTeamMembers = async (req, res, next) => {
 
         const filters = { $or: [...ORArray], assignee: { $in: memberIds } }
 
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
         if (leadSource) { filters.leadSource = { $regex: new RegExp(leadSource, "i") } }
         if (status) { filters.status = { $regex: new RegExp(status, "i") } }
         if (assignee && isValidObjectId(assignee)) { filters.assignee = new ObjectId(assignee) }
@@ -347,6 +368,11 @@ leadCtrl.GetAllLeads = async (req, res, next) => {
 
         const filters = { $or: [...ORArray] }
 
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
         if (leadSource) { filters.leadSource = { $regex: new RegExp(leadSource, "i") } }
         if (status) { filters.status = { $regex: new RegExp(status, "i") } }
         if (assignee && isValidObjectId(assignee)) { filters.assignee = new ObjectId(assignee) }
@@ -395,16 +421,28 @@ leadCtrl.DeleteALead = async (req, res, next) => {
 
 
 leadCtrl.createFollowup = async (req, res) => {
-    const { leadId, assignee, dueDate, note, dueTime } = req.body;
+    const { leadId, assignee, dueDate, note, dueTime, office } = req.body;
 
     console.log(req.body)
 
     try {
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
+
         if (!isValidObjectId(leadId)) return res.status(400).json({ msg: "Invalid Lead" });
 
         if (!dueDate) return res.status(400).json({ msg: "Invalid Due Date" });
 
-        const result = await Followup.create({ leadId: new ObjectId(leadId), assignee: new ObjectId(assignee), dueDate, note, dueTime })
+        const result = await Followup.create({ 
+            leadId: new ObjectId(leadId), assignee: new ObjectId(assignee), 
+            dueDate, note, dueTime , office})
 
         console.log(result)
 
@@ -457,7 +495,13 @@ leadCtrl.getFollowupsOfALead = async (req, res) => {
     try {
         if (!isValidObjectId(leadId)) return res.status(400).json({ msg: "Invalid Lead" });
 
-        const followups = await Followup.find({ leadId: new ObjectId(leadId) })
+        const filters = { leadId: new ObjectId(leadId) }
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
+        const followups = await Followup.find(filters)
             .populate('assignee', '_id name department')
 
         console.log("leadFollowups", followups)
@@ -489,6 +533,11 @@ leadCtrl.getAllFollowups = async (req, res) => {
         const todate = currentDate.toISOString().split("T")[0];
 
         const filters = {}
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
 
         if (startDateQuery && endDateQuery) {
             const startDate = new Date(`${startDateQuery}T00:00:00.000+05:30`);
@@ -600,6 +649,11 @@ leadCtrl.getTeamFollowups = async (req, res) => {
         const todate = currentDate.toISOString().split("T")[0];
 
         const filters = { assignee: { $in: memberIds } }
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
 
         if (startDateQuery && endDateQuery) {
             const startDate = new Date(`${startDateQuery}T00:00:00.000+05:30`);
@@ -701,6 +755,11 @@ leadCtrl.getEmpsFollowups = async (req, res) => {
         const todate = currentDate.toISOString().split("T")[0];
 
         const filters = { assignee: new ObjectId(assignee) }
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
 
         if (startDateQuery && endDateQuery) {
             const startDate = new Date(`${startDateQuery}T00:00:00.000+05:30`);

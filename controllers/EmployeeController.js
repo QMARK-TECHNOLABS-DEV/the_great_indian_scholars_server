@@ -10,6 +10,7 @@ const Stepper = require("../models/StepperModel")
 const ObjectId = mongoose.Types.ObjectId;
 const { isValidObjectId } = require("mongoose");
 const ISTDate = require("../middlewares/ISTDate");
+const Office = require("../models/OfficeModel");
 
 const employeeCtrl = {};
 
@@ -24,6 +25,16 @@ employeeCtrl.CreateEmployee = async (req, res) => {
     // console.log("req.file", req.file);
 
     try {
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
+
 
         let image;
         if (req.file) {
@@ -107,6 +118,11 @@ employeeCtrl.GetAllEmployees = async (req, res) => {
             department: { $regex: new RegExp(department, "i") },
         }
 
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
         const allEmployees = await Employee.find({ isActive: true, ...filters }, { password: 0 });
         // console.log("allEmployeess", allEmployees);
 
@@ -147,6 +163,11 @@ employeeCtrl.GetAllWorkers = async (req, res) => {
             email: { $regex: new RegExp(email, "i") },
         }
 
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
+        }
+
         const allWorkers = await Employee.find({ ...filters }, { password: 0 });
         // console.log("allWorkerss", allWorkers);
 
@@ -181,6 +202,11 @@ employeeCtrl.GetTeamMembers = async (req, res) => {
             ],
             name: { $regex: new RegExp(searchQuery, "i") },
             department: { $regex: new RegExp(department, "i") },
+        }
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
         }
 
         const allMembers = await Employee.find({ isActive: true, ...filters }, { password: 0 });
@@ -223,6 +249,11 @@ employeeCtrl.GetAllLeaders = async (req, res) => {
             name: { $regex: new RegExp(name, "i") },
             email: { $regex: new RegExp(email, "i") },
             department: { $regex: new RegExp(department, "i") },
+        }
+
+        const {office} = req.query;
+        if(isValidObjectId(office)){
+            filters.office = office;
         }
 
         const allLeaders = await Employee.find({ isActive: true, ...filters }, { _id: 1, name: 1 });

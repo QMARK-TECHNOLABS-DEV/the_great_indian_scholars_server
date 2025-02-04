@@ -2,14 +2,17 @@ const express = require("express");
 const router = express.Router();
 const adminCtrl = require("../controllers/AdminController");
 const adminCheckMiddleware = require("../middlewares/adminCheckMiddleware");
+const { customRoleChecker } = require("../middlewares/customRoleChecker");
 
 router.use(adminCheckMiddleware)
 
 router.get("/get/:id", adminCtrl.GetAdmin);
 router.put("/update", adminCtrl.UpdateAdmin);
 router.put("/change-password", adminCtrl.ChangePassword);
-router.get("/get-application-metrics", adminCtrl.GetApplicationMetrics);
 
+// dashboard endpoints
+router.get("/team-lead-statistics", customRoleChecker(["super admin"]), adminCtrl.getTeamLeaderStatistics)
+router.get("/get-application-metrics", adminCtrl.GetApplicationMetrics);
 router.get('/get-emps-appsnleads', adminCtrl.GetEmpBasedLeadsnApps)
 router.get('/get-appsnleads', adminCtrl.AllLeadsnApps)
 router.get('/get-leadstages', adminCtrl.LeadStages)

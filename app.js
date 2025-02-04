@@ -16,6 +16,8 @@ const stepperRouter = require("./routes/StepperRoutes");
 const leadRouter = require("./routes/LeadRoutes");
 const dataRouter = require("./routes/DataRoutes");
 const authMiddleware = require('./middlewares/authMiddleware');
+const { departmentRouter } = require('./routes/departments');
+const { uploadRouter } = require('./routes/uploads');
 
 const PORT = process.env.PORT || 8800;
 
@@ -53,6 +55,7 @@ app.use("/api/data", dataRouter);
 
 app.use(authMiddleware);
 
+app.use("/api/uploads", uploadRouter)
 app.use("/api/admin", adminRouter);
 app.use("/api/employee", employeeRouter);
 app.use("/api/student", studentRouter);
@@ -61,6 +64,7 @@ app.use("/api/comment", commentRouter);
 app.use("/api/project", projectRouter);
 app.use("/api/stepper", stepperRouter)
 app.use("/api/lead", leadRouter)
+app.use("/api/departments", departmentRouter)
 
 app.use("*", (req, res) => {
     res.sendStatus(404);

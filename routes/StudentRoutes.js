@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const studentCtrl = require("../controllers/StudentController");
-const adminCheckMiddleware = require("../middlewares/adminCheckMiddleware");
 const {upload} = require("../middlewares/multerToS3");
 const staffChecker = require("../middlewares/staffChecker");
 

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const expiryAccessToken = "1h";
+const expiryAccessToken = "1d";
 const expiryRefreshToken = "7d";
 
 
@@ -14,4 +14,4 @@ const generateRefreshToken = (userInfo) => {
     return jwt.sign(userInfo, process.env.REFRESH_TOKEN_SECRET, { expiresIn: expiryRefreshToken })
 }
 
-module.exports = {expiryAccessToken,expiryRefreshToken, generateAccessToken, generateRefreshToken}
+module.exports = { expiryAccessToken, expiryRefreshToken, generateAccessToken, generateRefreshToken }

@@ -7,6 +7,8 @@ const { isValidObjectId } = require("mongoose");
 const Lead = require("../models/LeadModel");
 const Office = require("../models/OfficeModel");
 const Student = require("../models/StudentModel");
+const Work = require("../models/WorkModel");
+const Followup = require("../models/FollowupModel");
 
 const adminCtrl = {};
 
@@ -114,13 +116,26 @@ adminCtrl.GetApplicationMetrics = async (req, res) => {
     const startDateQuery = req.query.start_date;
     const endDateQuery = req.query.end_date;
     const year = req.query.year;
+    const office = req.query.office;
 
     try {
         let filters = {};
+        const leadFilter = {}
 
-        if (country) { filters.country = { $regex: new RegExp(country, 'i') } };
+        if (country) {
+            filters.country = { $regex: new RegExp(country, 'i') }
+            leadFilter.country = country;
+        };
 
-        if (intake) { filters.intakes = intake };
+        if (intake) {
+            filters.intakes = intake
+            leadFilter.intake = intake;
+        };
+
+        if (isValidObjectId(office)) {
+            filters.office = office;
+            leadFilter.office = office;
+        }
 
         if (startDateQuery && endDateQuery) {
             const startDate = new Date(`${startDateQuery}T00:00:00.000+05:30`);
@@ -158,8 +173,7 @@ adminCtrl.GetApplicationMetrics = async (req, res) => {
         const notEnrolledApplications = await Application.countDocuments({ ...filters, phase: "not-enrolled" })
         // console.log("not-enrolled", notEnrolledApplications);
 
-        const totalLeads =  await Lead.countDocuments()
-
+        const totalLeads = await Lead.countDocuments(leadFilter)
 
         res.status(200).json([
             { name: "Total Lead", value: totalLeads },
@@ -180,35 +194,43 @@ adminCtrl.GetApplicationMetrics = async (req, res) => {
 
 
 adminCtrl.GetEmpBasedLeadsnApps = async (req, res) => {
-    const date = req.query.date;
-
-    const filters = {};
-
-    if (date) {
-        const altDate = new Date(date);
-        const startDate = new Date(altDate).setUTCHours(0, 0, 0, 0);
-        const endDate = new Date(altDate).setUTCHours(23, 59, 59, 999);
-
-        // console.log('startDate', new Date(startDate))
-        // console.log('endDate', new Date(endDate))
-
-        filters.createdAt = {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate)
-        };
-
-        filters.assignedDate = {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate)
-        };
-    }
 
     try {
+        const date = req.query.date;
+        const office = req.query.office;
+
+        const filters = {};
+
+        const matchFilters = {
+            isActive: true
+        }
+
+        if (isValidObjectId(office)) {
+            matchFilters.office = office;
+        }
+
+        if (date) {
+            const altDate = new Date(date);
+            const startDate = new Date(altDate).setUTCHours(0, 0, 0, 0);
+            const endDate = new Date(altDate).setUTCHours(23, 59, 59, 999);
+
+            // console.log('startDate', new Date(startDate))
+            // console.log('endDate', new Date(endDate))
+
+            filters.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+
+            filters.assignedDate = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        }
+
         const result = await Employee.aggregate([
             {
-                $match:{
-                    isActive : true
-                }
+                $match: matchFilters
             },
             {
                 $lookup: {
@@ -217,7 +239,7 @@ adminCtrl.GetEmpBasedLeadsnApps = async (req, res) => {
                     foreignField: "assignee",
                     as: "theWorks",
                     pipeline: [
-                        { $match: {createdAt: filters.createdAt } },
+                        { $match: { createdAt: filters.createdAt } },
                     ],
                 }
             },
@@ -228,7 +250,7 @@ adminCtrl.GetEmpBasedLeadsnApps = async (req, res) => {
                     foreignField: "assignee",
                     as: "theLeads",
                     pipeline: [
-                        { $match: {assignedDate: filters.assignedDate} },
+                        { $match: { assignedDate: filters.assignedDate } },
                     ],
                 }
             },
@@ -257,8 +279,14 @@ adminCtrl.GetEmpBasedLeadsnApps = async (req, res) => {
 
 adminCtrl.AllLeadsnApps = async (req, res) => {
     try {
-        const applCount = await Application.countDocuments()
-        const leadCount = await Lead.countDocuments()
+        const office = req.query.office;
+        const filters = {}
+        if (isValidObjectId(office)) {
+            filters.office = office;
+        }
+
+        const applCount = await Application.countDocuments(filters)
+        const leadCount = await Lead.countDocuments(filters)
 
         // console.log({applCount,leadCount})
 
@@ -273,122 +301,168 @@ adminCtrl.AllLeadsnApps = async (req, res) => {
 
 adminCtrl.LeadStages = async (req, res) => {
     try {
-      const date = req.query.date ; 
+        const date = req.query.date;
+        const office = req.query.office;
 
-      const filters = {};
-      if (date) {
-        const altDate = new Date(date);
-        const startDate = new Date(altDate).setUTCHours(0, 0, 0, 0);
-        const endDate = new Date(altDate).setUTCHours(23, 59, 59, 999);
-  
-        // console.log('startDate', new Date(startDate));
-        // console.log('endDate', new Date(endDate));
-  
-        filters.statusUpdatedAt = {
-          $gte: new Date(startDate),
-          $lte: new Date(endDate),
-        };
-      }
-  
-      const leadStages = [
-        { count: 0, _id: "Untouched" },
-        { count: 0, _id: "Converted" },
-        { count: 0, _id: "Warm" },
-        { count: 0, _id: "Hot" },
-        { count: 0, _id: "Not Contactable" },
-        { count: 0, _id: "Closed" },
-        { count: 0, _id: "Visa Approved" },
-        { count: 0, _id: "Not Interested" },
-      ];
-  
-      const result = await Lead.aggregate([
-        { $match: { ...filters } },
-        {
-          $group: {
-            _id: "$status",
-            count: { $sum: 1 },
-          },
-        },
-      ]);
-  
-      const mergedStages = leadStages.map((stage) => {
-        const match = result.find((item) => item._id === stage._id);
-        return match ? { ...stage, count: match.count } : stage;
-      });
-  
-    //   console.log(mergedStages);
-      res.status(200).json(mergedStages);
+        const filters = {};
+
+        if (isValidObjectId(office)) {
+            filters.office = office;
+        }
+
+        if (date) {
+            const altDate = new Date(date);
+            const startDate = new Date(altDate).setUTCHours(0, 0, 0, 0);
+            const endDate = new Date(altDate).setUTCHours(23, 59, 59, 999);
+
+            // console.log('startDate', new Date(startDate));
+            // console.log('endDate', new Date(endDate));
+
+            filters.statusUpdatedAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
+            };
+        }
+
+        const leadStages = [
+            { count: 0, _id: "Untouched" },
+            { count: 0, _id: "Converted" },
+            { count: 0, _id: "Warm" },
+            { count: 0, _id: "Hot" },
+            { count: 0, _id: "Not Contactable" },
+            { count: 0, _id: "Closed" },
+            { count: 0, _id: "Visa Approved" },
+            { count: 0, _id: "Not Interested" },
+        ];
+
+        const result = await Lead.aggregate([
+            { $match: { ...filters } },
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        const mergedStages = leadStages.map((stage) => {
+            const match = result.find((item) => item._id === stage._id);
+            return match ? { ...stage, count: match.count } : stage;
+        });
+
+        //   console.log(mergedStages);
+        res.status(200).json(mergedStages);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ msg: "Something went wrong" });
+        console.log(error);
+        res.status(500).json({ msg: "Something went wrong" });
     }
-  };
-  
+};
 
-  // Office CUD
-  adminCtrl.createOffice = async(req,res)=>{
+
+// Office CUD
+adminCtrl.createOffice = async (req, res) => {
     try {
-        const {name} = req.body;
+        const { name } = req.body;
 
         const newDoc = await Office.create({
             name
         })
 
-        console.log({newDoc})
+        console.log({ newDoc })
 
-        res.status(200).json({office: newDoc, msg: 'New office added'})
+        res.status(200).json({ office: newDoc, msg: 'New office added' })
     } catch (error) {
         console.log(error);
-      res.status(500).json({ msg: "Something went wrong" });
+        res.status(500).json({ msg: "Something went wrong" });
     }
-  }
+}
 
-  adminCtrl.updateOffice = async(req,res)=>{
+adminCtrl.updateOffice = async (req, res) => {
     try {
-        const {id} = req.params;
-        if(!isValidObjectId(id)){return res.status(400).json({ msg: "Invalid Id" });}
+        const { id } = req.params;
+        if (!isValidObjectId(id)) { return res.status(400).json({ msg: "Invalid Id" }); }
 
-        const {name} = req.body;
+        const { name } = req.body;
 
-        const office = await Office.findByIdAndUpdate(id, {$set:{name}}, {new:true})
+        const office = await Office.findByIdAndUpdate(id, { $set: { name } }, { new: true })
 
         if (!office) return res.status(404).json({ msg: "Office Not found" });
-        console.log({office})
+        console.log({ office })
 
 
-        res.status(200).json({office: office, msg: 'success'})
+        res.status(200).json({ office: office, msg: 'success' })
     } catch (error) {
         console.log(error);
-      res.status(500).json({ msg: "Something went wrong" });
+        res.status(500).json({ msg: "Something went wrong" });
     }
-  }
+}
 
-  adminCtrl.deleteOffice = async(req,res)=>{
+adminCtrl.deleteOffice = async (req, res) => {
     try {
-        const {id} = req.params;
-        if(!isValidObjectId(id)){return res.status(400).json({ msg: "Invalid Id" });}
+        const { id } = req.params;
+        if (!isValidObjectId(id)) { return res.status(400).json({ msg: "Invalid Id" }); }
 
         const office = await Office.findByIdAndDelete(id)
 
-        if(office){
+        if (office) {
             await Employee.updateMany(
-                {office: office._id},
-                {$unset: {office: 1}}
+                { office: office._id },
+                { $unset: { office: 1 } }
             );
 
             await Student.updateMany(
-                {office: office._id},
-                {$unset: {office: 1}}
+                { office: office._id },
+                { $unset: { office: 1 } }
             );
-        }else{
+        } else {
             return res.status(404).json({ msg: "Office Not found" });
         }
 
-        res.status(200).json({office: office, msg: 'success'})
+        res.status(200).json({ office: office, msg: 'success' })
     } catch (error) {
         console.log(error);
-      res.status(500).json({ msg: "Something went wrong" });
+        res.status(500).json({ msg: "Something went wrong" });
     }
-  }
+}
+
+adminCtrl.getTeamLeaderStatistics = async (req, res) => {
+    try {
+        const leaders = await Employee.find({ role: "leader" }, { _id: 1, name: 1 })
+
+        const mappedLeaders = await Promise.all(
+            leaders?.map(async (leader) => {
+                const members = await Employee.find({
+                    $or: [
+                        { leader: leader?._id },
+                        { _id: leader?._id },
+                    ],
+                }, { _id: 1 });
+
+                const memberIds = members?.map(member => member._id)
+
+                const [allTasks, allLeads, allFollowups] = await Promise.all([
+                    Work.countDocuments({ assignee: { $in: memberIds } }),
+                    Lead.countDocuments({ assignee: { $in: memberIds } }),
+                    Followup.countDocuments({ assignee: { $in: memberIds } }),
+                ])
+
+                return {
+                    _id: leader?._id,
+                    name: leader?.name,
+                    counts: {
+                        leads: allLeads,
+                        tasks: allTasks,
+                        followups: allFollowups
+                    }
+                }
+            }))
+
+
+        res.status(200).json({ msg: 'success', result: mappedLeaders })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Something went wrong" });
+    }
+}
 
 module.exports = adminCtrl;

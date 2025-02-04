@@ -1,8 +1,8 @@
-const staffChecker = (req,res,next)=>{
-    if(["admin","employee","leader"].includes(req.user.role)){
+const staffChecker = (req, res, next) => {
+    if (["super admin", "admin", "employee", "leader"].includes(req.user.role)) {
         next()
-    }else{
-        return res.status(401).json({msg:"Unauthorized"})
+    } else {
+        return res.status(401).json({ msg: "Unauthorized" })
     }
 }
 

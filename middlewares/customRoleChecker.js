@@ -1,4 +1,4 @@
-const customChecker = (roles=[]) => {
+const customRoleChecker = (roles=[]) => {
     return (req, res, next) => {
         if (roles?.includes(req.user.role)) {
             return next()
@@ -8,4 +8,4 @@ const customChecker = (roles=[]) => {
     }
 }
 
-module.exports = customChecker;
+module.exports = {customRoleChecker};
