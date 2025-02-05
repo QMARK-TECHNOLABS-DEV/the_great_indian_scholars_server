@@ -22,7 +22,7 @@ const { notifyRouter } = require('./routes/notifications');
 require("./cron/followupCron");
 
 
-const PORT = process.env.PORT || 8800;
+const PORT = process.env.PORT || 8080;
 
 ConnectDB();
 
