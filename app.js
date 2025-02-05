@@ -18,6 +18,9 @@ const dataRouter = require("./routes/DataRoutes");
 const authMiddleware = require('./middlewares/authMiddleware');
 const { departmentRouter } = require('./routes/departments');
 const { uploadRouter } = require('./routes/uploads');
+const { notifyRouter } = require('./routes/notifications');
+require("./cron/followupCron");
+
 
 const PORT = process.env.PORT || 8800;
 
@@ -55,6 +58,7 @@ app.use("/api/data", dataRouter);
 
 app.use(authMiddleware);
 
+app.use("/api/notifications", notifyRouter)
 app.use("/api/uploads", uploadRouter)
 app.use("/api/admin", adminRouter);
 app.use("/api/employee", employeeRouter);
@@ -67,7 +71,7 @@ app.use("/api/lead", leadRouter)
 app.use("/api/departments", departmentRouter)
 
 app.use("*", (req, res) => {
-    res.sendStatus(404);
+  res.sendStatus(404);
 })
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))

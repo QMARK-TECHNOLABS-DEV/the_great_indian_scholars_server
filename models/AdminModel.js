@@ -7,7 +7,7 @@ const AdminSchema = new mongoose.Schema({
     image: { type: String },
     role: { type: String, default: "admin", enum: ["super admin", "admin"], required: true },
 
-    office: { type: mongoose.Types.ObjectId, ref: 'Office', required: true },
+    office: { type: mongoose.Types.ObjectId, ref: 'Office' },
 
 }, { timestamps: true })
 

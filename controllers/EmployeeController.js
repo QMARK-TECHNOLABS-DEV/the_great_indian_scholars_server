@@ -880,8 +880,6 @@ employeeCtrl.GetMyProjectTasks = async (req, res) => {
 employeeCtrl.WorkAssign = async (req, res) => {
     const { applicationId, employeeId, stepperId, stepNumber } = req.body;
 
-    console.log(applicationId, employeeId, stepperId, stepNumber)
-
     try {
         if (!(isValidObjectId(applicationId) || isValidObjectId(employeeId))) {
             return res.status(400).json({ msg: "Invalid Id format" });
@@ -930,12 +928,15 @@ employeeCtrl.WorkAssign = async (req, res) => {
             stepStatus: "pending"
         })
 
-        console.log("newWork", newWork)
+        const savedWork = await newWork.save();
 
-        await newWork.save();
+        if(!savedWork){
+            return res.status(500).json({ msg: "Work not saved" });
+        }
 
         res.status(200).json({ msg: "Work Assigned", modifiedStepper })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ msg: "Something went Wrong" })
 
     }
