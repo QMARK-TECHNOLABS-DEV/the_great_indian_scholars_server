@@ -1,3 +1,4 @@
+const { isValidObjectId } = require('mongoose');
 const Admin = require('../models/AdminModel');
 const Employee = require('../models/EmployeeModel');
 const Notify = require('../models/Notify');
@@ -37,7 +38,7 @@ notifyCtrl.subscribe = async (req, res) => {
 
 const sendHandler = async ({ userId, title, body, notificationType, route }, subscriptionMap) => {
     try {
-        await Notify.create({
+        const notifyDoc = await Notify.create({
             userId,
             title,
             body,
@@ -47,7 +48,7 @@ const sendHandler = async ({ userId, title, body, notificationType, route }, sub
 
         const subscriptionData = subscriptionMap.get(userId.toString());
         if (subscriptionData) {
-            const payload = JSON.stringify({ title, message: body });
+            const payload = JSON.stringify({ docId: notifyDoc?._id?.toString(), userId, title, message: body, notificationType, route });
             await webpush.sendNotification(subscriptionData?.subscription, payload);
 
             return { userId, success: true };
