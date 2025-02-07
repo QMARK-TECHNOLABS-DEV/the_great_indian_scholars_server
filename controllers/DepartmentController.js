@@ -1,3 +1,4 @@
+const { isValidObjectId } = require("mongoose");
 const Department = require("../models/DepartmentModel");
 
 const deptCtrl = {}
@@ -97,6 +98,10 @@ deptCtrl.getDepartment = async (req, res) => {
         if (!isValidObjectId(id)) { return res.status(400).json({ msg: "Invalid Id" }); }
 
         const department = await Department.findById(id)
+
+        if (!department) {
+            return res.status(404).json({ msg: 'Not found' })
+        }
 
         console.log({ department })
 

@@ -3,14 +3,15 @@ const router = express.Router();
 const applicationCtrl = require("../controllers/ApplicationController");
 const {upload} = require("../middlewares/multerToS3");
 const staffChecker = require("../middlewares/staffChecker");
+const { permissionGuard } = require("../middlewares/permissionGuard");
 
-router.post("/create",  staffChecker, applicationCtrl.CreateApplication);
-router.get("/get-all",  staffChecker, applicationCtrl.GetAllApplications);
-router.get("/get-emps/:id",  staffChecker, applicationCtrl.GetMyApplications);
-router.get("/get-team/:id",  staffChecker, applicationCtrl.GetTeamApplications);
+router.post("/create",  staffChecker, permissionGuard(["create_application"]), applicationCtrl.CreateApplication);
+router.get("/get-all",  staffChecker, permissionGuard(["view_application"]), applicationCtrl.GetAllApplications);
+router.get("/get-emps/:id",  staffChecker, permissionGuard(["view_application"]), applicationCtrl.GetMyApplications);
+router.get("/get-team/:id",  staffChecker, permissionGuard(["view_application"]), applicationCtrl.GetTeamApplications);
 router.get("/get/:id",  applicationCtrl.GetApplication);
-router.put("/update/:id",  staffChecker, applicationCtrl.UpdateApplication);
-router.delete("/delete/:id",  staffChecker, applicationCtrl.DeleteApplication);
+router.put("/update/:id",  staffChecker, permissionGuard(["edit_application"]), applicationCtrl.UpdateApplication);
+router.delete("/delete/:id",  staffChecker, permissionGuard(["delete_application"]), applicationCtrl.DeleteApplication);
 
 router.post("/upload-document/:id/:name",  applicationCtrl.CheckDocName, upload.single('document'), applicationCtrl.UploadDoc)
 router.get("/get-document/:id/:name",  applicationCtrl.GetDocument);
