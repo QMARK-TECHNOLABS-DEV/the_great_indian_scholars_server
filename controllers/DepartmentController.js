@@ -96,7 +96,7 @@ deptCtrl.getDepartment = async (req, res) => {
         const { id } = req.params;
         if (!isValidObjectId(id)) { return res.status(400).json({ msg: "Invalid Id" }); }
 
-        const department = await Department.findById(id)
+        const department = await Department.findById(_id: id)
 
         console.log({ department })
 
