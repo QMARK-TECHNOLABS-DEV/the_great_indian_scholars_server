@@ -154,6 +154,7 @@ leadCtrl.UpdateLead = async (req, res, next) => {
                 studentId: studentExist?._id,
                 country: altLead.country ? altLead.country : "NIL",
                 creator: new ObjectId(assignee),
+                office: altLead?.office,
             })
 
             if(application){
