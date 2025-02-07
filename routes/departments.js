@@ -8,7 +8,7 @@ departmentRouter.get('/:id', deptCtrl.getDepartment)
 
 departmentRouter.put('/:id', customRoleChecker(["super admin", "admin"]), deptCtrl.updateDepartment)
 
-departmentRouter.use(customRoleChecker(["super admin"]))
+departmentRouter.use(customRoleChecker(["super admin", "admin"]))
 departmentRouter.post('', deptCtrl.createDepartment)
 departmentRouter.patch('/:id', deptCtrl.deactivateDepartment)
 
