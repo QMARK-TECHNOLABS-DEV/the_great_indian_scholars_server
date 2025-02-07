@@ -18,7 +18,7 @@ authCtrl.Login = async (req, res) => {
     if (!emailRegex.test(email)) return res.status(400).json({ msg: "Invalid Email format" });
 
     try {
-        const emailCaseRegex = new RegExp(email, 'i')
+        const emailCaseRegex = new RegExp(`^${email}$`, 'i')
 
         const admin = await Admin.findOne({ email: emailCaseRegex }).lean();
         const employee = await Employee.findOne({ email: emailCaseRegex }).lean();
