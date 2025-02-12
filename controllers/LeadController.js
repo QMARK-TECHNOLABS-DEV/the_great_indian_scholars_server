@@ -62,6 +62,17 @@ leadCtrl.CreateLead = async (req, res, next) => {
 leadCtrl.BulkLeadCreation = async (req, res, next) => {
     try {
         if (!req.file) return res.status(400).json({ msg: "Invalid Excel Sheet" })
+        const { assignee, office } = req.body
+
+        if (!isValidObjectId(office)) {
+            return res.status(400).json({ msg: "Invalid Office Id format" });
+        }
+
+        const isValidOffice = await Office.findById(office);
+
+        if (!isValidOffice) {
+            return res.status(400).json({ msg: "Invalid Office" });
+        }
 
         const excelBuffer = req.file.buffer; // Access the buffer from multer
 
@@ -75,8 +86,6 @@ leadCtrl.BulkLeadCreation = async (req, res, next) => {
 
         console.log(data)
 
-        const { assignee } = req.body
-
         const leadsArray = data?.map((lead) => {
             const obj = {
                 name: lead['First NameLast Name'],
@@ -84,6 +93,7 @@ leadCtrl.BulkLeadCreation = async (req, res, next) => {
                 phone: lead['Phone Number'],
                 country: lead['Country'],
                 leadSource: lead['Lead Source'],
+                office
             }
 
             if (assignee) {
@@ -95,6 +105,10 @@ leadCtrl.BulkLeadCreation = async (req, res, next) => {
         })
 
         const bulkleads = await Lead.insertMany(leadsArray)
+
+        if (bulkleads?.length === 0) {
+            return res.status(500).json({ msg: 'failed' })
+        }
 
         console.log("bulkie", bulkleads)
 
@@ -157,9 +171,9 @@ leadCtrl.UpdateLead = async (req, res, next) => {
                 office: altLead?.office,
             })
 
-            if(application){
+            if (application) {
                 await Lead.findByIdAndUpdate(leadId, {
-                    $set: {status:"Converted" , statusUpdatedAt: ISTDate()}
+                    $set: { status: "Converted", statusUpdatedAt: ISTDate() }
                 }, { new: true })
             }
         }
@@ -236,8 +250,8 @@ leadCtrl.GetMyLeads = async (req, res, next) => {
 
         const filters = { $or: [...ORArray] }
 
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
@@ -269,7 +283,7 @@ leadCtrl.GetMyLeads = async (req, res, next) => {
             result = result.slice(((page - 1) * entries), (page * entries))
         }
 
-        res.status(200).json({lead:result, count })
+        res.status(200).json({ lead: result, count })
 
     } catch (error) {
         console.error(error);
@@ -309,8 +323,8 @@ leadCtrl.GetLeadsofTeamMembers = async (req, res, next) => {
 
         const filters = { $or: [...ORArray], assignee: { $in: memberIds } }
 
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
@@ -339,7 +353,7 @@ leadCtrl.GetLeadsofTeamMembers = async (req, res, next) => {
             result = result.slice(((page - 1) * entries), (page * entries))
         }
 
-        res.status(200).json({lead:result, count })
+        res.status(200).json({ lead: result, count })
 
     } catch (error) {
         console.error(error);
@@ -369,8 +383,8 @@ leadCtrl.GetAllLeads = async (req, res, next) => {
 
         const filters = { $or: [...ORArray] }
 
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
@@ -386,7 +400,7 @@ leadCtrl.GetAllLeads = async (req, res, next) => {
 
         const leads = await Lead.find(filters)
             .populate('assignee', '_id name department')
-        
+
         const count = leads?.length
 
         let result = leads.reverse();
@@ -395,7 +409,7 @@ leadCtrl.GetAllLeads = async (req, res, next) => {
             result = result.slice(((page - 1) * entries), (page * entries))
         }
 
-        res.status(200).json({lead:result, count })
+        res.status(200).json({ lead: result, count })
 
     } catch (error) {
         console.error(error);
@@ -441,9 +455,10 @@ leadCtrl.createFollowup = async (req, res) => {
 
         if (!dueDate) return res.status(400).json({ msg: "Invalid Due Date" });
 
-        const result = await Followup.create({ 
-            leadId: new ObjectId(leadId), assignee: new ObjectId(assignee), 
-            dueDate, note, dueTime , office})
+        const result = await Followup.create({
+            leadId: new ObjectId(leadId), assignee: new ObjectId(assignee),
+            dueDate, note, dueTime, office
+        })
 
         console.log(result)
 
@@ -497,8 +512,8 @@ leadCtrl.getFollowupsOfALead = async (req, res) => {
         if (!isValidObjectId(leadId)) return res.status(400).json({ msg: "Invalid Lead" });
 
         const filters = { leadId: new ObjectId(leadId) }
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
@@ -517,14 +532,14 @@ leadCtrl.getFollowupsOfALead = async (req, res) => {
 }
 
 leadCtrl.getAllFollowups = async (req, res) => {
-    
+
     try {
         const status = req.query.status
         const notePresence = req.query.notePresence
-    
+
         const startDateQuery = req.query.start_date;
         const endDateQuery = req.query.end_date;
-    
+
         // Paginators
         const page = req.query.page;
         const entries = req.query.entries;
@@ -534,8 +549,8 @@ leadCtrl.getAllFollowups = async (req, res) => {
         const todate = currentDate.toISOString().split("T")[0];
 
         const filters = {}
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
@@ -619,16 +634,16 @@ leadCtrl.getAllFollowups = async (req, res) => {
 }
 
 leadCtrl.getTeamFollowups = async (req, res) => {
-    
+
     try {
         const status = req.query.status
         const notePresence = req.query.notePresence
-    
-    
+
+
         // Paginators
         const page = req.query.page;
         const entries = req.query.entries;
-    
+
         const startDateQuery = req.query.start_date;
         const endDateQuery = req.query.end_date;
 
@@ -650,8 +665,8 @@ leadCtrl.getTeamFollowups = async (req, res) => {
         const todate = currentDate.toISOString().split("T")[0];
 
         const filters = { assignee: { $in: memberIds } }
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
@@ -735,12 +750,12 @@ leadCtrl.getTeamFollowups = async (req, res) => {
 }
 
 leadCtrl.getEmpsFollowups = async (req, res) => {
-    
+
     try {
         const assignee = req.params.id
         const status = req.query.status
         const notePresence = req.query.notePresence
-    
+
         // Paginators
         const page = req.query.page;
         const entries = req.query.entries;
@@ -757,8 +772,8 @@ leadCtrl.getEmpsFollowups = async (req, res) => {
 
         const filters = { assignee: new ObjectId(assignee) }
 
-        const {office} = req.query;
-        if(isValidObjectId(office)){
+        const { office } = req.query;
+        if (isValidObjectId(office)) {
             filters.office = office;
         }
 
