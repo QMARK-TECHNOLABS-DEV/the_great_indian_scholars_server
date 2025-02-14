@@ -72,7 +72,8 @@ cron.schedule("* * * * *", async () => {
 
     followups.forEach(async (followup) => {
         if (followup.assignee && followup.dueTime) {
-            const [hour, minute] = followup.dueTime.split(":").map(Number);
+            const time = followup.dueTime.split(" ")[0];
+            const [hour, minute] = time.split(":").map(Number);
 
             const followupTime = dayjs(followup.dueDate).tz(IST_TIMEZONE).hour(hour).minute(minute).second(0);
 
