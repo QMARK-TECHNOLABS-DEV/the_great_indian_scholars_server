@@ -375,13 +375,17 @@ leadCtrl.GetAllLeads = async (req, res, next) => {
         const page = req.query.page;
         const entries = req.query.entries;
 
+        const filters = {}
+
         const searchQuery = req.query.search;
 
         const ORArray = [{ name: { $regex: new RegExp(searchQuery, "i") } },
         { email: { $regex: new RegExp(searchQuery, "i") } },
         { phone: { $regex: new RegExp(searchQuery, "i") } }];
 
-        const filters = { $or: [...ORArray] }
+        if(searchQuery){
+            filters.$or = ORArray
+        }
 
         const { office } = req.query;
         if (isValidObjectId(office)) {
