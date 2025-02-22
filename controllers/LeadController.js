@@ -383,7 +383,7 @@ leadCtrl.GetAllLeads = async (req, res, next) => {
         { email: { $regex: new RegExp(searchQuery, "i") } },
         { phone: { $regex: new RegExp(searchQuery, "i") } }];
 
-        if(searchQuery){
+        if (searchQuery) {
             filters.$or = ORArray
         }
 
@@ -857,6 +857,31 @@ leadCtrl.getEmpsFollowups = async (req, res) => {
         res.status(500).json({ msg: "Something went wrong" });
     }
 
+}
+
+leadCtrl.DeleteMultipleLeads = async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ msg: "Invalid input, array of IDs required" });
+        }
+
+        if (!ids.every(id => isValidObjectId(id))) {
+            return res.status(400).json({ msg: 'One or more invalid IDs' })
+        }
+
+        const result = await Lead.deleteMany({ _id: { $in: ids } });
+
+        if (result.deletedCount === 0) {
+            return res.status(400).json({ msg: "No leads found to delete" })
+        }
+
+        return res.status(200).json({ msg: `${result.deletedCount} leads deleted` })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Something went wrong" });
+    }
 }
 
 module.exports = leadCtrl;

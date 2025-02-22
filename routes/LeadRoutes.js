@@ -19,6 +19,7 @@ router.get("/assigned-leads/:id", staffChecker, permissionGuard(["view_lead"]), 
 router.get("/team-leads/:id", staffChecker, permissionGuard(["view_lead"]), leadCtrl.GetLeadsofTeamMembers)
 router.get("/get-all", staffChecker, permissionGuard(["view_lead"]), leadCtrl.GetAllLeads)
 
+router.delete("/delete-many", staffChecker, permissionGuard(["delete_lead"]), leadCtrl.DeleteMultipleLeads)
 router.delete("/delete/:id", staffChecker, permissionGuard(["delete_lead"]), leadCtrl.DeleteALead)
 
 router.post("/followup/create", staffChecker, permissionGuard(["create_followup"]), leadCtrl.createFollowup)
