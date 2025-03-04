@@ -9,6 +9,7 @@ const Office = require("../models/OfficeModel");
 const Student = require("../models/StudentModel");
 const Work = require("../models/WorkModel");
 const Followup = require("../models/FollowupModel");
+const { Status } = require("../models/Status");
 
 const adminCtrl = {};
 
@@ -324,16 +325,19 @@ adminCtrl.LeadStages = async (req, res) => {
             };
         }
 
-        const leadStages = [
-            { count: 0, _id: "Untouched" },
-            { count: 0, _id: "Converted" },
-            { count: 0, _id: "Warm" },
-            { count: 0, _id: "Hot" },
-            { count: 0, _id: "Not Contactable" },
-            { count: 0, _id: "Closed" },
-            { count: 0, _id: "Visa Approved" },
-            { count: 0, _id: "Not Interested" },
-        ];
+        // const leadStages = [
+        //     { count: 0, _id: "Untouched" },
+        //     { count: 0, _id: "Converted" },
+        //     { count: 0, _id: "Warm" },
+        //     { count: 0, _id: "Hot" },
+        //     { count: 0, _id: "Not Contactable" },
+        //     { count: 0, _id: "Closed" },
+        //     { count: 0, _id: "Visa Approved" },
+        //     { count: 0, _id: "Not Interested" },
+        // ];
+
+        const leadStatuses = await Status.findOne({name:"leadStatus"})?.lean()
+        const leadStages = leadStatuses?.list?.map(item=> ({count:0, _id:item?.label, color:item?.color}))
 
         const result = await Lead.aggregate([
             { $match: { ...filters } },

@@ -1,6 +1,7 @@
 const { isValidObjectId } = require("mongoose");
 const Data = require("../models/DataModel");
 const Office = require("../models/OfficeModel");
+const { Status } = require("../models/Status");
 
 const dataCtrl = {}
 
@@ -15,14 +16,14 @@ dataCtrl.addData = async (req, res) => {
         let result = {}
 
         if (theDoc) {
-            const altList = list.filter(item=> item?.trim())
+            const altList = list.filter(item => item?.trim())
 
             const updatedDoc = await Data.findByIdAndUpdate(theDoc._id, {
                 $set: { list: altList }
             }, { new: true })
 
             console.log(updatedDoc)
-            
+
             result = updatedDoc
 
         } else {
@@ -65,33 +66,92 @@ dataCtrl.getData = async (req, res) => {
 
 // office
 
-dataCtrl.getOffice = async(req,res)=>{
+dataCtrl.getOffice = async (req, res) => {
     try {
-        const {id} = req.params;
-        if(!isValidObjectId(id)){return res.status(400).json({ msg: "Invalid Id" });}
+        const { id } = req.params;
+        if (!isValidObjectId(id)) { return res.status(400).json({ msg: "Invalid Id" }); }
 
         const office = await Office.findById(id)
 
-        console.log({office})
+        console.log({ office })
 
-        res.status(200).json({office: office, msg: 'success'})
+        res.status(200).json({ office: office, msg: 'success' })
     } catch (error) {
         console.log(error);
-      res.status(500).json({ msg: "Something went wrong" });
+        res.status(500).json({ msg: "Something went wrong" });
     }
-  }
+}
 
-  dataCtrl.getAllOffices = async(req,res)=>{
+dataCtrl.getAllOffices = async (req, res) => {
     try {
         const office = await Office.find()
 
-        console.log({office})
+        console.log({ office })
 
-        res.status(200).json({office: office?.reverse(), msg: 'success'})
+        res.status(200).json({ office: office?.reverse(), msg: 'success' })
     } catch (error) {
         console.log(error);
-      res.status(500).json({ msg: "Something went wrong" });
+        res.status(500).json({ msg: "Something went wrong" });
     }
-  }
+}
+
+
+dataCtrl.addStatus = async (req, res) => {
+    const { name, list } = req.body;
+
+    if (!name) return res.status(400).json({ msg: "Bad Request" });
+
+    try {
+        const theDoc = await Status.findOne({ name: name })
+
+        let result = {}
+
+        if (theDoc) {
+            const altList = list.filter(item => item?.label?.trim())
+
+            const updatedDoc = await Status.findByIdAndUpdate(theDoc._id, {
+                $set: { list: altList }
+            }, { new: true })
+
+            console.log(updatedDoc)
+
+            result = updatedDoc
+
+        } else {
+            const newDoc = await Status.create({
+                name: name,
+                list: [...list]
+            })
+
+            console.log(newDoc)
+
+            result = newDoc
+        }
+
+        res.status(200).json(result)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ msg: "Something went wrong" })
+    }
+}
+
+
+dataCtrl.getStatus = async (req, res) => {
+    const name = req.query.name;
+    console.log("name", name)
+
+    if (!name) return res.status(400).json({ msg: "Bad Request" })
+
+    try {
+        const status = await Status.findOne({ name: name })
+        if (!status) return res.status(400).json({ msg: "status Not Found" })
+        console.log(status)
+
+        res.status(200).json(status)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ msg: "Something went wrong" })
+    }
+}
 
 module.exports = dataCtrl;
