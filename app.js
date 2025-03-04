@@ -71,7 +71,7 @@ app.use("/api/lead", leadRouter)
 app.use("/api/departments", departmentRouter)
 
 app.use("*", (req, res) => {
-  res.sendStatus(404);
+  res.sendStatus(404)
 })
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
